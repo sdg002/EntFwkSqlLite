@@ -1,6 +1,8 @@
+using DemoLib.entity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 namespace UnitTestProject1
 {
@@ -18,10 +20,16 @@ namespace UnitTestProject1
 
         }
         [TestMethod]
-        public void SaveSomePoints()
+        public void SaveSinglePoint()
         {
+            var pts = utils.Util.CreateRandomPoints(-1, 1, 1);
+            Point[] ptsCloned = pts.Select(p => p.Clone()).ToArray();
             DemoLib.SqlDbContext ctx = CreateEF();
-
+            ctx.Points.AddRange(pts);
+            ctx.SaveChanges();
+            Point[] ptsFromDb = ctx.Points.ToArray();
+            Assert.IsTrue(ptsFromDb.Length == 1);
+            Assert.AreEqual(ptsFromDb[0], ptsCloned[0]);
         }
         private DemoLib.SqlDbContext CreateEF()
         {

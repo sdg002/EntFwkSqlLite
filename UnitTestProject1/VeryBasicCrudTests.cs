@@ -2,6 +2,7 @@ using DemoLib.entity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -103,6 +104,59 @@ namespace UnitTestProject1
                     triFromDb.Vertices.Select(tv => tv.Vertex).ToArray(), 
                     triOriginal.Vertices.Select(tv => tv.Vertex).ToArray());
             }
+        }
+        /// <summary>
+        /// In this test we will ensure that a Point cannot be deleted if it is referenced by a Triangle
+        /// </summary>
+        [TestMethod]
+        public void CascadeDeletePoint()
+        {
+            int maxpointsUsedForTriangles = 4,maxpointsNotUsedForTriangles=3;
+            var ptsUsedForTriangles = utils.Util.CreateRandomPoints(-5, 5, maxpointsUsedForTriangles);
+            var ptsNotUsedForTriangles = utils.Util.CreateRandomPoints(-5, 5, maxpointsNotUsedForTriangles);
+            Triangle[] triangles = utils.Util.FindAllTriangles(ptsUsedForTriangles);
+            DemoLib.SqlDbContext ctx = CreateEF();
+            ctx.Points.AddRange(ptsUsedForTriangles);
+            ctx.Points.AddRange(ptsNotUsedForTriangles);
+            ctx.Triangles.AddRange(triangles);
+            ctx.SaveChanges();
+            Point[] ptsFromDb = ctx.Points.ToArray();
+            Assert.IsTrue(ptsFromDb.Length == maxpointsUsedForTriangles+maxpointsNotUsedForTriangles);
+            Triangle[] trisFromDb = ctx.Triangles.ToArray();
+            Assert.IsTrue(trisFromDb.Length== 4);
+            ///
+            /// Try to delete the points which are not being used for any triangles - should be deleted
+            ///
+            for(int i=0;i<ptsFromDb.Length;i++)
+            {
+                var pt = ptsFromDb[i];
+                if (ptsUsedForTriangles.Any(p => p.ID == pt.ID)) continue;
+                ctx.Points.Remove(pt);
+                ctx.SaveChanges();
+            }
+            ///
+            /// Try to delete the points which participate in triangles  - should not be allowed
+            ///
+            Point[] ptsFromDb2 = ctx.Points.ToArray();
+            foreach (var pt in ptsFromDb2)
+            {
+                try
+                {
+                    ctx.Points.Remove(pt);
+                    ctx.SaveChanges();
+                }
+                catch (DbUpdateException ex)
+                {
+                    //OK - we expected this because of preventing cascade delete
+                    Assert.IsTrue(ex.InnerException.Message.Contains("'FOREIGN KEY constraint failed"));
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail();
+                }
+            }
+            Point[] ptsFromDb3 = ctx.Points.ToArray();
+            Assert.AreEqual(maxpointsUsedForTriangles, ptsFromDb3.Length);
         }
         private DemoLib.SqlDbContext CreateEF()
         {

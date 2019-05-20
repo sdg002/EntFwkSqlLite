@@ -20,7 +20,9 @@ namespace DemoLib
             modelBuilder.Entity<Point>().HasKey(p => p.ID);
             modelBuilder.Entity<Triangle>().HasKey(t => t.ID);
             modelBuilder.Entity<TriangleVertex>().HasKey(t => t.ID);
-
+            modelBuilder.Entity<Triangle>().
+                HasMany<TriangleVertex>(t => t.Vertices).WithOne().
+                HasForeignKey(tv => tv.ParentID);
             ////modelBuilder.Ignore(typeof(double));
 
 

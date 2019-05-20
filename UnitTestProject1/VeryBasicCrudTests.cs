@@ -2,6 +2,7 @@ using DemoLib.entity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace UnitTestProject1
@@ -69,7 +70,39 @@ namespace UnitTestProject1
             {
                 Assert.AreEqual(ptsFromDb[i], triFromDb.Vertices.ElementAt(i).Vertex);
             }
-
+        }
+        /// <summary>
+        /// In this test we are creating multiple triangles and saving them to db
+        /// We are then testing if the retrieved triangles matched the original triangles
+        /// This ensures that we got the foreign keys right
+        /// </summary>
+        [TestMethod]
+        public void CreateMultipleTriangles()
+        {
+            int maxpoints = 4;
+            var pts = utils.Util.CreateRandomPoints(-5, 5, maxpoints);
+            Triangle[] triangles = utils.Util.FindAllTriangles(pts);
+            List<int> idsOfVerticesOriginal = new List<int>();
+            idsOfVerticesOriginal.AddRange(triangles.SelectMany(tri => tri.Vertices.Select(tv => tv.Vertex.ID)));
+            Assert.AreEqual(4, triangles.Length);
+            DemoLib.SqlDbContext ctx = CreateEF();
+            ctx.Points.AddRange(pts);
+            ctx.Triangles.AddRange (triangles);
+            ctx.SaveChanges();
+            Point[] ptsFromDb = ctx.Points.ToArray();
+            Triangle[] trisFromDb = ctx.Triangles.ToArray();
+            List<int> idsOfVerticesFromDb = new List<int>();
+            idsOfVerticesFromDb.AddRange(trisFromDb.SelectMany(tri => tri.Vertices.Select(tv => tv.Vertex.ID)));
+            CollectionAssert.AreEquivalent(idsOfVerticesFromDb, idsOfVerticesOriginal);
+            for (int i=0;i<triangles.Length;i++)
+            {
+                Triangle triOriginal = triangles[i];
+                Triangle triFromDb = trisFromDb[i];
+                Assert.AreEqual(triFromDb.Vertices.Count(), 3);
+                CollectionAssert.AreEquivalent(
+                    triFromDb.Vertices.Select(tv => tv.Vertex).ToArray(), 
+                    triOriginal.Vertices.Select(tv => tv.Vertex).ToArray());
+            }
         }
         private DemoLib.SqlDbContext CreateEF()
         {

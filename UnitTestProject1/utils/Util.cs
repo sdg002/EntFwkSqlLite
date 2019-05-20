@@ -45,6 +45,60 @@ namespace UnitTestProject1.utils
             }
             return pts.ToArray();
         }
+        /// <summary>
+        /// Given N points, this function will find all unique combinations of 3 points
+        /// </summary>
+        /// <param name="points">Points</param>
+        /// <returns></returns>
+        public static Triangle[] FindAllTriangles(Point[] points)
+        {
+            //you were here//How, you cannot use a for loop, 
+            //create an extension method to generate pairs of items from an collection
+            //have an outerloop, loop over every item, pre-generate pairs for the rest, skip where pair contains the outer item
+            //you were here.
 
+            List<Point[]> three_grams = new List<Point[]>();
+            for (int i = 0; i < points.Length; i++)
+            {
+                Point pt_1_of_3 = points[i];
+                for (int j = i + 1; j < points.Length; j++)
+                {
+                    Point pt_2_of_3 = points[j];
+                    for (int k = j + 1; k < points.Length; k++)
+                    {
+                        Point pt_3_of_3 = points[k];
+                        var arr3gram = new Point[]
+                        {
+                            pt_1_of_3,
+                            pt_2_of_3,
+                            pt_3_of_3
+                        };
+                        three_grams.Add(arr3gram);
+                    }
+                }
+            }
+            List<Triangle> lstTriangles = new List<Triangle>();
+            foreach (Point[] vertices in three_grams)
+            {
+                Triangle tri = CreateTriangleFrom3Points(vertices);
+                //tri.Vertices = vertices; //This breaks EF Core. Colleciton cannot be an Array if it is to be managed by EF.
+                lstTriangles.Add(tri);
+            }
+            return lstTriangles.ToArray();
+        }
+        /// <summary>
+        /// Creates a single Triangle object with the specified 3 vertices
+        /// </summary>
+        /// <param name="vertices"></param>
+        /// <returns></returns>
+        private static Triangle CreateTriangleFrom3Points(Point[] vertices)
+        {
+            if (vertices.Length != 3) throw new ArgumentException("3 vertices expected");
+            DemoLib.entity.Triangle tri = new Triangle();
+            tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = vertices[0] });
+            tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = vertices[1] });
+            tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = vertices[2] });
+            return tri;
+        }
     }
 }

@@ -223,7 +223,34 @@ namespace UnitTestProject1
                 Assert.IsNotNull(tri);
                 Assert.IsTrue(tri.Vertices.Any(tv => tv.PointID == idOfPoint));
             }
-
         }
+        ///// <summary>
+        ///// In this test we are checking whether FK integrity is working.
+        ///// We will attempt to add a Triangle using Points which have not been added to the database
+        ///// </summary>
+        //[TestMethod]
+        //public void Adding_Trianlge_With_NonExistent_Point_Should_Not_Be_Allowed()
+        //{
+        //    try
+        //    {
+        //        int maxpoints = 4;
+        //        var pts = utils.Util.CreateRandomPoints(-5, 5, maxpoints);
+        //        Triangle[] triangles = utils.Util.FindAllTriangles(pts);
+        //        DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
+        //        ctx.Triangles.AddRange(triangles);//Add triangles without adding Points
+        //        ctx.SaveChanges();
+        //        var pts1=ctx.Points.ToArray();
+        //        Assert.Fail("Exception was expected");
+        //          This did not work as expected - the points get Saved too when saving triangles
+        //    }
+        //    catch (DbUpdateException ex)
+        //    {
+        //        //OK
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Assert.Fail("The right exception was not thrown");
+        //    }
+        //}
     }
 }

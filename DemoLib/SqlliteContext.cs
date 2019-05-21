@@ -31,8 +31,12 @@ namespace DemoLib
                 HasForeignKey(tv => tv.ParentID).
                 OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Point>().HasIndex(pt => pt.ID);
+            modelBuilder.Entity<TriangleVertex>().HasIndex(tv => tv.ID);
+            modelBuilder.Entity<Triangle>().HasIndex(tri => tri.ID);//TODO test with and without index
             modelBuilder.Entity<TriangleVertex>().HasIndex(tv => tv.PointID);//TODO test with and without index
-
+            modelBuilder.Entity<TriangleVertex>().HasIndex(tv => tv.ParentID);//TODO test with and without index
+            
         }
         public DbSet<Point> Points { get; set; }
         public DbSet<Triangle> Triangles { get; set; }

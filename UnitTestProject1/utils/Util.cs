@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace UnitTestProject1.utils
@@ -52,8 +53,9 @@ namespace UnitTestProject1.utils
         /// </summary>
         /// <param name="points">Points</param>
         /// <returns></returns>
-        public static Triangle[] FindAllTriangles(Point[] points)
+        public static Triangle[] FindAllTriangles(IEnumerable<Point> pts)
         {
+            Point[] points = pts.ToArray();
             //you were here//How, you cannot use a for loop, 
             //create an extension method to generate pairs of items from an collection
             //have an outerloop, loop over every item, pre-generate pairs for the rest, skip where pair contains the outer item

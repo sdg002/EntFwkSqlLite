@@ -44,3 +44,6 @@ namespace DemoLib
 
     }
 }
+
+
+//TODO Test why searching for Triangle given the Point takes longer than expected

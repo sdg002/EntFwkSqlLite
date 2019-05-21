@@ -31,25 +31,8 @@ namespace DemoLib
                 HasForeignKey(tv => tv.ParentID).
                 OnDelete(DeleteBehavior.Restrict);
 
-            ////modelBuilder.Ignore(typeof(double));
+            modelBuilder.Entity<TriangleVertex>().HasIndex(tv => tv.PointID);//TODO test with and without index
 
-
-
-            //modelBuilder.Entity<Triangle>().Ignore(tri => tri.Sides);
-
-
-
-            ////modelBuilder.Entity<Triangle>().HasMany<Point>(tri => tri.Vertices);
-            ////modelBuilder.Entity<Triangle>().HasMany<Point>(t=>t.Vertices).WithOne().hasre
-            ////HasMany(t=>t.Vertices).ToTable()
-            //modelBuilder.Entity<Triangle>().HasMany<Point>(t => t.Vertices).
-            //        WithOne().OnDelete(DeleteBehavior.Cascade);
-            ////modelBuilder.Entity<Triangle>().OwnsMany<Point>(t => t.Vertices,(x)=> 
-            ////{
-
-            ////});//.HasForeignKey()
-
-            ////base.OnModelCreating(modelBuilder);
         }
         public DbSet<Point> Points { get; set; }
         public DbSet<Triangle> Triangles { get; set; }

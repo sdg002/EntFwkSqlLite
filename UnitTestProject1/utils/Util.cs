@@ -1,4 +1,6 @@
 ﻿using DemoLib.entity;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -99,6 +101,23 @@ namespace UnitTestProject1.utils
             tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = vertices[1] });
             tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = vertices[2] });
             return tri;
+        }
+        /// <summary>
+        /// Single creation method, responsible for creating the Db context with right parameters
+        /// </summary>
+        /// <returns></returns>
+        internal static DemoLib.SqlDbContext CreateSqlLiteContext()
+        {
+
+            var connection = new SqliteConnection("DataSource=:memory:");
+            var opts = new DbContextOptionsBuilder<DemoLib.SqlDbContext>()
+                    .UseSqlite(connection)
+                    .Options;
+            connection.Open();
+            var _dbctxInner = new DemoLib.SqlDbContext(opts);
+            //_dbctxInner.Connection = connection;//We could add the Connection for a more unified Dispose management
+            _dbctxInner.Database.EnsureCreated();
+            return _dbctxInner;
         }
     }
 }

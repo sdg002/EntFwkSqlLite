@@ -18,15 +18,15 @@ namespace UnitTestProject1
         [TestMethod]
         public void CreateDbContext()
         {
-            DemoLib.SqlDbContext ctx = CreateEF();
-
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
+            Assert.IsNotNull(ctx);
         }
         [TestMethod]
         public void SaveSinglePoint()
         {
             var pts = utils.Util.CreateRandomPoints(-1, 1, 1);
             Point[] ptsCloned = pts.Select(p => p.Clone()).ToArray();
-            DemoLib.SqlDbContext ctx = CreateEF();
+            DemoLib.SqlDbContext ctx =utils.Util.CreateSqlLiteContext();
             ctx.Points.AddRange(pts);
             ctx.SaveChanges();
             Point[] ptsFromDb = ctx.Points.ToArray();
@@ -39,7 +39,7 @@ namespace UnitTestProject1
             int maxpoints = 10;
             var pts = utils.Util.CreateRandomPoints(-5, 5, maxpoints);
             Point[] ptsCloned = pts.Select(p => p.Clone()).ToArray();
-            DemoLib.SqlDbContext ctx = CreateEF();
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
             ctx.Points.AddRange(pts);
             ctx.SaveChanges();
             Point[] ptsFromDb = ctx.Points.ToArray();
@@ -60,7 +60,7 @@ namespace UnitTestProject1
             tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = pts[0] });
             tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = pts[1] });
             tri.Vertices.Add(new TriangleVertex { ParentID = tri.ID, Vertex = pts[2] });
-            DemoLib.SqlDbContext ctx = CreateEF();
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
             ctx.Points.AddRange(pts);
             ctx.Triangles.Add(tri);
             ctx.SaveChanges();
@@ -86,7 +86,7 @@ namespace UnitTestProject1
             List<int> idsOfVerticesOriginal = new List<int>();
             idsOfVerticesOriginal.AddRange(triangles.SelectMany(tri => tri.Vertices.Select(tv => tv.Vertex.ID)));
             Assert.AreEqual(4, triangles.Length);
-            DemoLib.SqlDbContext ctx = CreateEF();
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
             ctx.Points.AddRange(pts);
             ctx.Triangles.AddRange (triangles);
             ctx.SaveChanges();
@@ -115,7 +115,7 @@ namespace UnitTestProject1
             var ptsUsedForTriangles = utils.Util.CreateRandomPoints(-5, 5, maxpointsUsedForTriangles);
             var ptsNotUsedForTriangles = utils.Util.CreateRandomPoints(-5, 5, maxpointsNotUsedForTriangles);
             Triangle[] triangles = utils.Util.FindAllTriangles(ptsUsedForTriangles);
-            DemoLib.SqlDbContext ctx = CreateEF();
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
             ctx.Points.AddRange(ptsUsedForTriangles);
             ctx.Points.AddRange(ptsNotUsedForTriangles);
             ctx.Triangles.AddRange(triangles);
@@ -158,19 +158,72 @@ namespace UnitTestProject1
             Point[] ptsFromDb3 = ctx.Points.ToArray();
             Assert.AreEqual(maxpointsUsedForTriangles, ptsFromDb3.Length);
         }
-        private DemoLib.SqlDbContext CreateEF()
+        /// <summary>
+        /// We are verifying that querying a Point using the primary key works
+        /// </summary>
+        [TestMethod]
+        public void Query_Point_Using_PrimaryKey()
         {
-            
-            var connection = new SqliteConnection("DataSource=:memory:");
-            var opts = new DbContextOptionsBuilder<DemoLib.SqlDbContext>()
-                    .UseSqlite(connection)
-                    .Options;
-            connection.Open();
-            var _dbctxInner = new DemoLib.SqlDbContext(opts);
-            //_dbctxInner.Connection = connection;//We could add the Connection for a more unified Dispose management
-            _dbctxInner.Database.EnsureCreated();
-            return _dbctxInner;
+            Random rnd = new Random(DateTime.Now.Second);
+            int maxpoints = 4;
+            var pts = utils.Util.CreateRandomPoints(-5, 5, maxpoints);
+            Triangle[] triangles = utils.Util.FindAllTriangles(pts);
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
+            ctx.Points.AddRange(pts);
+            ctx.Triangles.AddRange(triangles);
+            ctx.SaveChanges();
+            int[] idsOfPointsRandom = pts.Select(p => p.ID).OrderBy(id => rnd.Next()).ToArray();
+            foreach (int idOfPoint in idsOfPointsRandom)
+            {
+                var point=ctx.Points.Find(idOfPoint);
+                Assert.AreEqual(idOfPoint, point.ID);
+            }
         }
+        /// <summary>
+        /// We are verifying that querying a Triangle using the primary key works
+        /// </summary>
+        [TestMethod]
+        public void Query_Triangle_Using_PrimaryKey()
+        {
+            Random rnd = new Random(DateTime.Now.Second);
+            int maxpoints = 4;
+            var pts = utils.Util.CreateRandomPoints(-5, 5, maxpoints);
+            Triangle[] triangles = utils.Util.FindAllTriangles(pts);
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
+            ctx.Points.AddRange(pts);
+            ctx.Triangles.AddRange(triangles);
+            ctx.SaveChanges();
+            int[] idsOfTrianglesRandom = triangles.
+                                        Select(tri => tri.ID).
+                                        OrderBy(id => rnd.Next()).ToArray();
+            foreach (int idOfTriangle in idsOfTrianglesRandom)
+            {
+                var tri = ctx.Triangles.Find(idOfTriangle);
+                Assert.AreEqual(idOfTriangle, tri.ID);
+            }
+        }
+        [TestMethod]
+        public void QueryForTriangle_Given_Point()
+        {
+            Random rnd = new Random(DateTime.Now.Second);
+            int maxpoints = 4;
+            var pts = utils.Util.CreateRandomPoints(-5, 5, maxpoints);
+            Triangle[] triangles = utils.Util.FindAllTriangles(pts);
+            DemoLib.SqlDbContext ctx = utils.Util.CreateSqlLiteContext();
+            ctx.Points.AddRange(pts);
+            ctx.Triangles.AddRange(triangles);
+            ctx.SaveChanges();
+            ///
+            /// We have the database ready, now iterate over every point and verify that a LINQ query works
+            ///
+            int[] idsOfPointsRandom = pts.Select(p => p.ID).OrderBy(id => rnd.Next()).ToArray();
+            foreach(int idOfPoint in idsOfPointsRandom)
+            {
+                var tri=ctx.Triangles.Where(t => t.Vertices.Any(tv => tv.Vertex.ID == idOfPoint)).FirstOrDefault();
+                Assert.IsNotNull(tri);
+                Assert.IsTrue(tri.Vertices.Any(tv => tv.PointID == idOfPoint));
+            }
 
+        }
     }
 }

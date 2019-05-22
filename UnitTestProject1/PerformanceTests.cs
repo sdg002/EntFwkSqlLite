@@ -120,13 +120,15 @@ namespace UnitTestProject1
                 sw.Start();
                 foreach (int idOfTriangle in idsOfTrianglesRandom)
                 {
-                    var tri = ctx.Triangles.Find(idOfTriangle);
+                    var tri = ctx.Triangles.Find(idOfTriangle);                    
                     Assert.AreEqual(idOfTriangle, tri.ID);
                 }
                 sw.Stop();
                 timeTakenUsingEF = sw.ElapsedMilliseconds;
                 Trace.WriteLine($"SQLLITE-Time taken to query for all '{lstTriangles.Count()}' triangles one by one was {timeTakenUsingEF} ms ");
             }
+            //TODO How about testing the PK performance using Where clause. e.g. ctx.Triangles.Where(t=>t.ID==idOfTriangle).FirstOrDefault();
+
             ///
             /// The time taken by EF-SQLLITE Find() should be significantly lower than that of raw List
             ///

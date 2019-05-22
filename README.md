@@ -9,6 +9,8 @@ I was faced with the challenge of efficiently storing and retrieving the Points 
 
 <<clusters and triangles>>
 << ER diagram >>
+#Using Dictionary and HashSets for better performance
+
 
 
 
